@@ -17,7 +17,8 @@
 	"keywords": [
 		"irc",
 		"node",
-		"chat"
+		"chat",
+		"webhook"
 	],
 	"author": "curtis zimmerman",
 	"license": "GPLv3",

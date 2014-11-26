@@ -1,0 +1,20 @@
+
+machine:
+  timezone:
+    America/Los_Angeles #timezone
+
+  node:
+    version: 0.10.24
+
+  # override host for testing
+  hosts:
+    irc.example.com: 127.0.0.1
+
+general:
+  branches:
+    only:
+      - master
+
+#notify:
+#  webhooks:
+#    - url: https://bipbipjulian.com/hooks/circle
