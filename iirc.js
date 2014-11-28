@@ -9,8 +9,11 @@
  * @version 0.0.1a
  */
 
-module.exports = exports = __irc = (function() {
+module.exports = exports = __iirc = (function() {
 	"use strict";
+
+	var net = require('net');
+	var tls = require('tls');
 
 	/*\
 	|*| done.abcde ("async pattern") utility closure
@@ -102,17 +105,57 @@ module.exports = exports = __irc = (function() {
 	};
 
 	var $classes = {
-		Connection: (function() {
-			var Connection = function( channel, port, server, ssl ) {
+		Channel: (function() {
+			var Channel = function( channel ) {
 				this.channel = channel;
+				return this;
+			};
+			Channel.prototype.send = function( message ) {
+				// send to the channel
+				return false;
+			};
+			return Channel;
+		})(),
+		Connection: (function() {
+			var Connection = function( port, server, ssl ) {
+				this.channels = [];
 				this.id = $util.getID($data.settings.defaults.idLength);
 				this.port = port;
+				this.ready = false;
 				this.server = server;
+				this.socket = null;
 				this.ssl = ssl;
+				return this;
 			};
-			Connection.prototype.connect = function() {
+			Connection.prototype.connect = function( callback ) {
 				// connect to this server's instance, return id
-				return false;
+				var options = {
+					port: this.port,
+					host: this.server
+				};
+				var handler = function() {
+					// handle this shit
+					this.ready = true;
+					return typeof(callback) === 'function' && callback();
+				};
+				var client = false;
+				if (this.ssl) {
+					client = tls.connect(optoins, handler);
+				} else {
+					client = net.connect(options, handler);
+				}
+				client.on('on', function( data ) {
+					// handle client data
+					return false;
+				});
+				client.on('end', function() {
+					// handle client session end
+					return false;
+				});
+			};
+			Connection.prototype.join = function( channel ) {
+
+				return true;
 			};
 			return Connection;
 		})()
@@ -120,6 +163,9 @@ module.exports = exports = __irc = (function() {
 
 	var $func = {
 		broadcast: function( id, message, callback ) {
+			for (var i=0,len=$data.connections.length; i<len; i++) {
+
+			}	
 			return false;
 		},
 		config: function( descriptor, callback ) {
