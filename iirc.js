@@ -90,6 +90,65 @@ module.exports = exports = __iirc = (function() {
 		};
 	})();
 
+	/**
+	 * @function _pubsub
+	 * Exposes publish/subscribe pattern utility functions.
+	 * @method flush
+	 * Flush the pubsub cache.
+	 * @method pub
+	 * Publish a callback topic.
+	 * @param (string) topic - The pubsub "topic" key.
+	 * @param (array) args - An array of arguments to pass to callback.
+	 * @param (object) scope - The callback scope. 
+	 * @method sub
+	 * Subscribe to a callback topic.
+	 * @param (string) topic - The pubsub "topic" key.
+	 * @param (function) callback - The callback to apply.
+	 * @return (array} An array with topic and callback.
+	 * @method unsub
+	 * Unsubscribe a specific pubsub event.
+	 * @param (array) handle - The pubsub handle.
+	 * @param (boolean) total - Delete entire topic?
+	 */
+	var _pubsub = (function() {
+		var cache = {};
+		var flush = function() {
+			return cache = {};
+		};
+		var publish = function( topic, args, scope ) {
+			if (cache[topic]) {
+				var currentTopic = cache[topic],
+					topicLength = currentTopic.length;
+				for (var i=0; i<topicLength; i++) {
+					currentTopic[i].apply(scope || this, args || []);
+				}
+			}
+		};
+		var subscribe = function( topic, callback ) {
+			if (!cache[topic]) cache[topic] = [];
+			cache[topic].push(callback);
+			return [topic, callback];
+		};
+		var unsubscribe = function( handle, total ) {
+			var topic = handle[0],
+				cacheLength = cache[topic].length;
+			if (cache[topic]) {
+				for (var i=0; i<cacheLength; i++) {
+					if (cache[topic][i] === handle) {
+						cache[topic].splice(cache[topic][i], 1);
+						if (total) delete cache[topic];
+					}
+				}
+			}
+		};
+		return {
+			flush: flush,
+			pub: publish,
+			sub: subscribe,
+			unsub: unsubscribe
+		};
+	})();
+
 	var $data = {
 		connections: [],
 		settings: {
@@ -212,6 +271,26 @@ module.exports = exports = __iirc = (function() {
 				i++
 			) {	id += charset.substr(Math.floor(Math.random()*charset.length), 1); }
 			return id;
+		},
+		parseInput: function( input ) {
+			if (typeof(input) !== 'string') return false;
+			var result = {};
+			try {
+				var sub = input.split(/:/);
+				sub.shift();
+				var message = sub.shift().split(' ');
+				result.prefix = message.shift();
+				result.command = message.shift();
+				var params = message.filter(function(i) {
+					if (i !== '') return i;
+				});
+				if (params.length > 0) result.params = params;
+				result.trailing = sub.join(':');
+			} catch(e) {
+				_pubsub.pub('/iirc/error', 'inputParse(): '+e.message);
+				return false;
+			}
+			return result;
 		}
 	};
 
@@ -226,7 +305,8 @@ module.exports = exports = __iirc = (function() {
 
 	var __test = {
 		util: {
-			getID: $util.getID
+			getID: $util.getID,
+			parseInput: $util.parseInput
 		}
 	};
 

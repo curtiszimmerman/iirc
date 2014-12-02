@@ -28,8 +28,36 @@ var __test = (function() {
 				expect(iirc.__test.util.getID('a')).to.equal(false);
 			});
 		});
-		describe('#util.foo()', function() {
-			
+		describe('#util.parseInput()', function() {
+			it('should return false when called with integer', function() {
+				expect(iirc.__test.util.parseInput(1)).to.equal(false);
+			});
+			it('should comprehend standard network messages', function() {
+				var result = iirc.__test.util.parseInput(':irc.example.net 001 iirc :Welcome to IRC iirc');
+				expect(result.prefix).to.not.be.undefined();
+				expect(result.prefix).to.be.a('string').and.equal('irc.example.net');
+				expect(result.command).to.not.be.undefined();
+				expect(result.command).to.be.a('string').and.equal('001');
+				expect(result.params).to.not.be.undefined();
+				expect(result.params).to.be.an('array').and.deep.equal(['iirc']);
+				expect(result.trailing).to.not.be.undefined();
+				expect(result.trailing).to.be.a('string').and.equal('Welcome to IRC iirc');
+				// prefix, command, params
+			});
+			it('should comprehend server announcements', function() {
+				var result = iirc.__test.util.parseInput(':iirc!~default@irc.example.net QUIT :Quit: leaving');
+				expect(result.prefix).to.not.be.undefined();
+				expect(result.prefix).to.be.a('string').and.equal('iirc!~default@irc.example.net');
+				expect(result.command).to.not.be.undefined();
+				expect(result.command).to.be.a('string').and.equal('QUIT');
+				expect(result.params).to.be.undefined();
+				expect(result.trailing).to.not.be.undefined();
+				expect(result.trailing).to.be.a('string').and.equal('Quit: leaving');
+			});
+			it('should comprehend whois lists', function() {
+				var result = iirc.__test.util.parseInput(':morgan.freenode.net 353 OTP22Bot = #gobot :OTP22Bot @L0j1k @curtisz @einhander');
+				expect(true).to.be.true();
+			});
 		});
 	});
 })();
