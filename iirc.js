@@ -9,6 +9,30 @@
  * @version 0.0.1a
  */
 
+/*
+iirc.connect('#example', 'irc.example.net', 6667, false);
+iirc.connect({
+		channel: '#example',
+		host: 'irc.example.net',
+		port: 6667,
+		ssl: false
+	});
+iirc.connect('#example', 'irc.example.net', 6667, false)
+	.on('error', function( error ) {
+		// error handle
+	})
+	.on('end', function() {
+		// end handle
+	})
+	.on('data', function( data ) {
+		// data handle
+	})
+	.on('message', function( message ) {
+		// message handle
+	});
+	
+*/
+
 module.exports = exports = __iirc = (function() {
 	"use strict";
 
@@ -167,6 +191,11 @@ module.exports = exports = __iirc = (function() {
 		Channel: (function() {
 			var Channel = function( channel ) {
 				this.channel = channel;
+				//
+				//
+				// you need to do the dirty work of joining/parting, and monitoring for changes
+				//
+				//
 				return this;
 			};
 			Channel.prototype.send = function( message ) {
@@ -213,7 +242,7 @@ module.exports = exports = __iirc = (function() {
 				});
 			};
 			Connection.prototype.join = function( channel ) {
-
+				this.channels.push(new $classes.Channel());
 				return true;
 			};
 			return Connection;
@@ -228,15 +257,33 @@ module.exports = exports = __iirc = (function() {
 			return false;
 		},
 		config: function( descriptor, callback ) {
-			return false;
+			var channel = descriptor.channel;
+			var host = descriptor.host;
+			var port = descriptor.port;
+			var ssl = descriptor.ssl;
+			var connection = new $classes.Connection();
+			$data.connections.push();
+			return typeof(callback) === 'function' && callback();
 		},
-		connect: function( host, port, ssl, callback ) {
+		connect: function( channel, host, port, ssl, callback ) {
+			if (arguments.length === 1) {
+				var descriptor = arguments[0];
+				var channel = descriptor.channel;
+				var host = descriptor.host;
+				var port = descriptor.port;
+				var ssl = descriptor.ssl;
+			}
+			var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
 			var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 			var port = typeof(port) !== 'undefined' ? port : 6667;
-			var ssl = typeof(port) !== 'undefined' ? ssl : false;
+			var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
 			return false;
 		},
 		die: function( id, callback ) {
+			return false;
+		},
+		join: function( id, channel, callback ) {
+
 			return false;
 		},
 		message: function( id, channel, nick, callback ) {
@@ -316,8 +363,10 @@ module.exports = exports = __iirc = (function() {
 		connect: $func.connect,
 		die: $func.die,
 		message: $func.message,
+		on: $func.on,
 		reconnect: $func.reconnect,
 		send: $func.send,
+		server: $func.connect,
 		set: $func.set,
 		tell: $func.tell,
 		__test: __test
