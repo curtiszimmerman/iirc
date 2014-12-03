@@ -17,7 +17,7 @@ var __test = (function() {
 	var expect = require('chai').expect;
 	
 	describe('iirc', function() {
-		describe('#util.getID()', function() {
+		describe('# util.getID()', function() {
 			it('should return a string', function() {
 				expect(typeof(iirc.__test.util.getID())).to.equal("string");
 			});
@@ -28,7 +28,7 @@ var __test = (function() {
 				expect(iirc.__test.util.getID('a')).to.equal(false);
 			});
 		});
-		describe('#util.parseInput()', function() {
+		describe('# util.parseInput()', function() {
 			it('should return false when called with integer', function() {
 				expect(iirc.__test.util.parseInput(1)).to.equal(false);
 			});
@@ -55,7 +55,15 @@ var __test = (function() {
 				expect(result.trailing).to.be.a('string').and.equal('Quit: leaving');
 			});
 			it('should comprehend whois lists', function() {
-				var result = iirc.__test.util.parseInput(':morgan.freenode.net 353 OTP22Bot = #gobot :OTP22Bot @L0j1k @curtisz @einhander');
+				var result = iirc.__test.util.parseInput(':irc.example.net 353 iirc = #channel :@iirc user1 user2 user3');
+				expect(result.prefix).to.not.be.undefined();
+				expect(result.prefix).to.be.a('string').and.equal('irc.example.net');
+				expect(result.command).to.not.be.undefined();
+				expect(result.command).to.be.a('string').and.equal('353');
+				expect(result.params).to.not.be.undefined();
+				expect(result.params).to.be.deep.equal([ 'iirc', '=', '#channel' ]);
+				expect(result.trailing).to.not.be.undefined();
+				expect(result.trailing).to.be.a('string').and.equal('@iirc user1 user2 user3');
 				expect(true).to.be.true();
 			});
 		});
