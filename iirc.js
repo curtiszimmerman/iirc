@@ -262,6 +262,7 @@ module.exports = exports = __iirc = (function() {
 			var port = descriptor.port;
 			var ssl = descriptor.ssl;
 			var connection = new $classes.Connection();
+			var id = connection.id();
 			$data.connections.push();
 			return typeof(callback) === 'function' && callback();
 		},
@@ -277,28 +278,43 @@ module.exports = exports = __iirc = (function() {
 			var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 			var port = typeof(port) !== 'undefined' ? port : 6667;
 			var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
+			$func.config({
+				channel: channel,
+				host: host,
+				port: port,
+				ssl: ssl
+			}, function(err, id) {
+				if (typeof(callback) !== 'function') return false;
+				return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
+			});
+		},
+		data: function( id, callback ) {
+			// send raw string to connection
 			return false;
 		},
 		die: function( id, callback ) {
+			// destroy channels
+			// destroy server
 			return false;
 		},
 		join: function( id, channel, callback ) {
-
+			// create channel
 			return false;
 		},
-		message: function( id, channel, nick, callback ) {
+		message: function( id, nick, callback ) {
+			// send message to nick
 			return false;
 		},
-		reconnect: function( id, callback ) {
+		part: function( id, channel, callback ) {
+			// part specified channel
 			return false;
 		},
 		send: function( id, channel ) {
+			// send message to channel
 			return false;
 		},
 		set: function( id, key, value ) {
-			return false;
-		},
-		tell: function( id, channel, nick, callback ) {
+			// set a particular key to value
 			return false;
 		}
 	};
@@ -362,13 +378,14 @@ module.exports = exports = __iirc = (function() {
 		config: $func.config,
 		connect: $func.connect,
 		die: $func.die,
+		join: $func.join,
 		message: $func.message,
 		on: $func.on,
-		reconnect: $func.reconnect,
+		part: $func.part,
 		send: $func.send,
 		server: $func.connect,
 		set: $func.set,
-		tell: $func.tell,
+		tell: $func.message,
 		__test: __test
 	};
 })();
