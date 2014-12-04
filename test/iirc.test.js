@@ -67,5 +67,11 @@ var __test = (function() {
 				expect(true).to.be.true();
 			});
 		});
+		describe('# iirc()', function() {
+			it('should return false when called with zero arguments', function() {
+				var result = iirc.config();
+				expect(result).to.be.false();
+			});
+		});
 	});
 })();

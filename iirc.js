@@ -99,7 +99,7 @@ module.exports = exports = __iirc = (function() {
 			return console.log(pre[type]+data);
 		};
 		var _dbg = function( data ) {
-			if ($data.server.state.debug === true) return _con(data, 0);
+			if ($app.server.state.debug === true) return _con(data, 0);
 		};
 		var _err = function( data ) {
 			return _con(data, 1);
@@ -173,8 +173,7 @@ module.exports = exports = __iirc = (function() {
 		};
 	})();
 
-	var $data = {
-		connections: [],
+	var $app = {
 		settings: {
 			defaults: {
 				altnick: "iirc_",
@@ -207,7 +206,7 @@ module.exports = exports = __iirc = (function() {
 		Connection: (function() {
 			var Connection = function( port, server, ssl ) {
 				this.channels = [];
-				this.id = $util.getID($data.settings.defaults.idLength);
+				this.id = $util.getID($app.settings.defaults.idLength);
 				this.port = port;
 				this.ready = false;
 				this.server = server;
@@ -249,76 +248,6 @@ module.exports = exports = __iirc = (function() {
 		})()
 	};
 
-	var $func = {
-		broadcast: function( id, message, callback ) {
-			for (var i=0,len=$data.connections.length; i<len; i++) {
-
-			}	
-			return false;
-		},
-		config: function( descriptor, callback ) {
-			var channel = descriptor.channel;
-			var host = descriptor.host;
-			var port = descriptor.port;
-			var ssl = descriptor.ssl;
-			var connection = new $classes.Connection();
-			var id = connection.id();
-			$data.connections.push();
-			return typeof(callback) === 'function' && callback();
-		},
-		connect: function( channel, host, port, ssl, callback ) {
-			if (arguments.length === 1) {
-				var descriptor = arguments[0];
-				var channel = descriptor.channel;
-				var host = descriptor.host;
-				var port = descriptor.port;
-				var ssl = descriptor.ssl;
-			}
-			var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
-			var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
-			var port = typeof(port) !== 'undefined' ? port : 6667;
-			var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
-			$func.config({
-				channel: channel,
-				host: host,
-				port: port,
-				ssl: ssl
-			}, function(err, id) {
-				if (typeof(callback) !== 'function') return false;
-				return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
-			});
-		},
-		data: function( id, callback ) {
-			// send raw string to connection
-			return false;
-		},
-		die: function( id, callback ) {
-			// destroy channels
-			// destroy server
-			return false;
-		},
-		join: function( id, channel, callback ) {
-			// create channel
-			return false;
-		},
-		message: function( id, nick, callback ) {
-			// send message to nick
-			return false;
-		},
-		part: function( id, channel, callback ) {
-			// part specified channel
-			return false;
-		},
-		send: function( id, channel ) {
-			// send message to channel
-			return false;
-		},
-		set: function( id, key, value ) {
-			// set a particular key to value
-			return false;
-		}
-	};
-
 	var $util = {
 		/**
 		 * @function $util.getID
@@ -330,7 +259,7 @@ module.exports = exports = __iirc = (function() {
 			if (typeof(len) !== 'undefined' && typeof(len) !== 'number') return false;
 			for (
 				var i = 0, id = '', charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-				i < (len > 0 ? len : $data.settings.defaults.idLength);
+				i < (len > 0 ? len : $app.settings.defaults.idLength);
 				i++
 			) {	id += charset.substr(Math.floor(Math.random()*charset.length), 1); }
 			return id;
@@ -357,13 +286,81 @@ module.exports = exports = __iirc = (function() {
 		}
 	};
 
-	var $iirc = function() {
-		var init = function( descriptor ) {
-			if (typeof(descriptor) === 'undefined') return false;
-		};
-		return {
-			init: init
-		};
+	var $iirc = {
+		data: {
+			connections: {}
+		},
+		broadcast: function( id, message, callback ) {
+			for (var i=0,len=this.data.connections.length; i<len; i++) {
+
+			}	
+			return false;
+		},
+		config: function( descriptor ) {
+			if (arguments.length === 0) return false;
+			var channel = descriptor.channel;
+			var host = descriptor.host;
+			var port = descriptor.port;
+			var ssl = descriptor.ssl;
+			var connection = new $classes.Connection();
+			var id = connection.id();
+			this.data.connection[id] = connection;
+			return this;
+		},
+		connect: function( channel, host, port, ssl ) {
+			if (arguments.length === 0) return false;
+			if (arguments.length === 1) {
+				var descriptor = arguments[0];
+				var channel = descriptor.channel;
+				var host = descriptor.host;
+				var port = descriptor.port;
+				var ssl = descriptor.ssl;
+			}
+			var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
+			var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
+			var port = typeof(port) !== 'undefined' ? port : 6667;
+			var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
+			this.config({
+				channel: channel,
+				host: host,
+				port: port,
+				ssl: ssl
+			});
+			/*, function(err, id) {
+				if (typeof(callback) !== 'function') return false;
+				return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
+			});*/
+			return this;
+		},
+		die: function( id, callback ) {
+			// destroy channels
+			// destroy server
+			return false;
+		},
+		join: function( id, channel ) {
+			// create channel
+			return false;
+		},
+		message: function( id, nick, callback ) {
+			// send message to nick
+			return false;
+		},
+		part: function( id, channel, callback ) {
+			// part specified channel
+			return false;
+		},
+		raw: function( id, callback ) {
+			// send raw string to connection
+			return false;
+		},
+		send: function( id, channel ) {
+			// send message to channel
+			return false;
+		},
+		set: function( id, key, value ) {
+			// set a particular key to value
+			return false;
+		}
 	};
 
 	var __test = {
@@ -374,18 +371,19 @@ module.exports = exports = __iirc = (function() {
 	};
 
 	return {
-		broadcast: $func.broadcast,
-		config: $func.config,
-		connect: $func.connect,
-		die: $func.die,
-		join: $func.join,
-		message: $func.message,
-		on: $func.on,
-		part: $func.part,
-		send: $func.send,
-		server: $func.connect,
-		set: $func.set,
-		tell: $func.message,
+		broadcast: $iirc.broadcast,
+		config: $iirc.config,
+		connect: $iirc.connect,
+		die: $iirc.die,
+		join: $iirc.join,
+		message: $iirc.message,
+		on: $iirc.on,
+		part: $iirc.part,
+		raw: $iirc.raw,
+		send: $iirc.send,
+		server: $iirc.connect,
+		set: $iirc.set,
+		tell: $iirc.message,
 		__test: __test
 	};
 })();
