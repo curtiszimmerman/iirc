@@ -286,91 +286,89 @@ module.exports = exports = __iirc = (function() {
 		}
 	};
 
-	var $iirc = {
-		data: {
+	var IIRC = function() {
+		this.data = {
 			connections: {}
-		},
-		broadcast: function( id, message, callback ) {
-			for (var i=0,len=this.data.connections.length; i<len; i++) {
-
+		};
+		this.__test = {
+			util: {
+				getID: $util.getID,
+				parseInput: $util.parseInput
+			}
+		};
+	};
+	IIRC.prototype.broadcast = function( id, message, callback ) {
+		for (var i=0,len=this.data.connections.length; i<len; i++) {
 			}	
-			return false;
-		},
-		config: function( descriptor ) {
-			if (arguments.length === 0) return false;
+		return false;
+	};
+	IIRC.prototype.config = function( descriptor ) {
+		if (arguments.length === 0) return false;
+		var channel = descriptor.channel;
+		var host = descriptor.host;
+		var port = descriptor.port;
+		var ssl = descriptor.ssl;
+		var connection = new $classes.Connection();
+		var id = connection.id;
+		this.data.connections[id] = connection;
+		return this;
+	};
+	IIRC.prototype.connect = function( channel, host, port, ssl ) {
+		if (arguments.length === 0) return false;
+		if (arguments.length === 1) {
+			var descriptor = arguments[0];
 			var channel = descriptor.channel;
 			var host = descriptor.host;
 			var port = descriptor.port;
 			var ssl = descriptor.ssl;
-			var connection = new $classes.Connection();
-			var id = connection.id();
-			this.data.connection[id] = connection;
-			return this;
-		},
-		connect: function( channel, host, port, ssl ) {
-			if (arguments.length === 0) return false;
-			if (arguments.length === 1) {
-				var descriptor = arguments[0];
-				var channel = descriptor.channel;
-				var host = descriptor.host;
-				var port = descriptor.port;
-				var ssl = descriptor.ssl;
-			}
-			var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
-			var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
-			var port = typeof(port) !== 'undefined' ? port : 6667;
-			var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
-			this.config({
-				channel: channel,
-				host: host,
-				port: port,
-				ssl: ssl
-			});
-			/*, function(err, id) {
-				if (typeof(callback) !== 'function') return false;
-				return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
-			});*/
-			return this;
-		},
-		die: function( id, callback ) {
-			// destroy channels
-			// destroy server
-			return false;
-		},
-		join: function( id, channel ) {
-			// create channel
-			return false;
-		},
-		message: function( id, nick, callback ) {
-			// send message to nick
-			return false;
-		},
-		part: function( id, channel, callback ) {
-			// part specified channel
-			return false;
-		},
-		raw: function( id, callback ) {
-			// send raw string to connection
-			return false;
-		},
-		send: function( id, channel ) {
-			// send message to channel
-			return false;
-		},
-		set: function( id, key, value ) {
-			// set a particular key to value
-			return false;
 		}
+		var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
+		var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
+		var port = typeof(port) !== 'undefined' ? port : 6667;
+		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
+		this.config({
+			channel: channel,
+			host: host,
+			port: port,
+			ssl: ssl
+		});
+		/*, function(err, id) {
+			if (typeof(callback) !== 'function') return false;
+			return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
+		});*/
+		return this;
+	};
+	IIRC.prototype.die = function( id, callback ) {
+		// destroy channels
+		// destroy server
+		return false;
+	};
+	IIRC.prototype.join = function( id, channel ) {
+		// create channel
+		return false;
+	};
+	IIRC.prototype.message = function( id, nick, callback ) {
+		// send message to nick
+		return false;
+	};
+	IIRC.prototype.part = function( id, channel, callback ) {
+		// part specified channel
+		return false;
+	};
+	IIRC.prototype.raw = function( id, callback ) {
+		// send raw string to connection
+		return false;
+	};
+	IIRC.prototype.send = function( id, channel ) {
+		// send message to channel
+		return false;
+	};
+	IIRC.prototype.set = function( id, key, value ) {
+		// set a particular key to value
+		return false;
 	};
 
-	var __test = {
-		util: {
-			getID: $util.getID,
-			parseInput: $util.parseInput
-		}
-	};
-
-	return {
+	/*return {
 		broadcast: $iirc.broadcast,
 		config: $iirc.config,
 		connect: $iirc.connect,
@@ -385,5 +383,7 @@ module.exports = exports = __iirc = (function() {
 		set: $iirc.set,
 		tell: $iirc.message,
 		__test: __test
-	};
+	};*/
+
+	return new IIRC();
 })();
