@@ -302,17 +302,6 @@ module.exports = exports = __iirc = (function() {
 			}	
 		return false;
 	};
-	IIRC.prototype.config = function( descriptor ) {
-		if (arguments.length === 0) return false;
-		var channel = descriptor.channel;
-		var host = descriptor.host;
-		var port = descriptor.port;
-		var ssl = descriptor.ssl;
-		var connection = new $classes.Connection();
-		var id = connection.id;
-		this.data.connections[id] = connection;
-		return this;
-	};
 	IIRC.prototype.connect = function( channel, host, port, ssl ) {
 		if (arguments.length === 0) return false;
 		if (arguments.length === 1) {
@@ -326,16 +315,9 @@ module.exports = exports = __iirc = (function() {
 		var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 		var port = typeof(port) !== 'undefined' ? port : 6667;
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
-		this.config({
-			channel: channel,
-			host: host,
-			port: port,
-			ssl: ssl
-		});
-		/*, function(err, id) {
-			if (typeof(callback) !== 'function') return false;
-			return (typeof(err) !== 'undefined') ? callback(err) : callback(null, id);
-		});*/
+		var connection = new $classes.Connection();
+		var id = connection.id;
+		this.data.connections[id] = connection;
 		return this;
 	};
 	IIRC.prototype.die = function( id, callback ) {
@@ -367,23 +349,6 @@ module.exports = exports = __iirc = (function() {
 		// set a particular key to value
 		return false;
 	};
-
-	/*return {
-		broadcast: $iirc.broadcast,
-		config: $iirc.config,
-		connect: $iirc.connect,
-		die: $iirc.die,
-		join: $iirc.join,
-		message: $iirc.message,
-		on: $iirc.on,
-		part: $iirc.part,
-		raw: $iirc.raw,
-		send: $iirc.send,
-		server: $iirc.connect,
-		set: $iirc.set,
-		tell: $iirc.message,
-		__test: __test
-	};*/
 
 	return new IIRC();
 })();

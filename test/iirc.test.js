@@ -67,13 +67,13 @@ var __test = (function() {
 				expect(true).to.be.true();
 			});
 		});
-		describe('# iirc()', function() {
+		describe('# iirc.connect()', function() {
 			it('should return false when called with zero arguments', function() {
-				var result = iirc.config();
+				var result = iirc.connect();
 				expect(result).to.be.false();
 			});
 			it('should return itself when called with arguments', function() {
-				var result = iirc.config('##iirc', 'irc.example.net', 6667, false);
+				var result = iirc.connect('##iirc', 'irc.example.net', 6667, false);
 				expect(result).to.not.be.undefined();
 				expect(result).to.be.an('object');
 			});
