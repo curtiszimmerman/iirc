@@ -204,12 +204,15 @@ module.exports = exports = __iirc = (function() {
 			return Channel;
 		})(),
 		Connection: (function() {
-			var Connection = function( port, server, ssl ) {
+			var Connection = function( host, port, ssl ) {
+				if (typeof(host) === 'undefined') throw new $classes.Exception('Connection(): Empty host parameter.');
+				if (typeof(port) === 'undefined') throw new $classes.Exception('Connection(): Empty port parameter.');
+				if (typeof(ssl) === 'undefined') throw new $classes.Exception('Connection(): Empty ssl paramter.');
 				this.channels = [];
 				this.id = $util.getID($app.settings.defaults.idLength);
 				this.port = port;
 				this.ready = false;
-				this.server = server;
+				this.host = host;
 				this.socket = null;
 				this.ssl = ssl;
 				return this;
@@ -218,7 +221,7 @@ module.exports = exports = __iirc = (function() {
 				// connect to this server's instance, return id
 				var options = {
 					port: this.port,
-					host: this.server
+					host: this.host
 				};
 				var handler = function() {
 					// handle this shit
@@ -226,10 +229,14 @@ module.exports = exports = __iirc = (function() {
 					return typeof(callback) === 'function' && callback();
 				};
 				var client = false;
-				if (this.ssl) {
-					client = tls.connect(optoins, handler);
-				} else {
-					client = net.connect(options, handler);
+				try {
+					if (this.ssl === true) {
+						client = tls.connect(options, handler);
+					} else {
+						client = net.connect(options, handler);
+					}
+				} catch(e) {
+					console.log('==>> ERROR ['+e.message+']');
 				}
 				client.on('on', function( data ) {
 					// handle client data
@@ -245,6 +252,13 @@ module.exports = exports = __iirc = (function() {
 				return true;
 			};
 			return Connection;
+		})(),
+		Exception: (function() {
+			var Exception = function( message ) {
+				this.message = message;
+				this.name = 'Exception';
+			};
+			return Exception;
 		})()
 	};
 
@@ -315,9 +329,10 @@ module.exports = exports = __iirc = (function() {
 		var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 		var port = typeof(port) !== 'undefined' ? port : 6667;
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
-		var connection = new $classes.Connection();
+		var connection = new $classes.Connection(host, port, ssl);
 		var id = connection.id;
 		this.data.connections[id] = connection;
+		connection.connect();
 		return this;
 	};
 	IIRC.prototype.die = function( id, callback ) {

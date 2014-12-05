@@ -78,5 +78,10 @@ var __test = (function() {
 				expect(result).to.be.an('object');
 			});
 		});
+		describe('# iirc.die()', function() {
+			it('should true when stubbed', function() {
+				expect(true).to.be.true();
+			});
+		});
 	});
 })();
