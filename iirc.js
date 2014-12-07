@@ -189,6 +189,7 @@ module.exports = exports = __iirc = (function() {
 	var $classes = {
 		Channel: (function() {
 			var Channel = function( channel ) {
+				if (typeof(channel) === 'undefined') throw new $classes.Exception('Channel(): Empty channel paramter.');
 				this.channel = channel;
 				//
 				//
@@ -196,6 +197,14 @@ module.exports = exports = __iirc = (function() {
 				//
 				//
 				return this;
+			};
+			Channel.prototype.join = function() {
+				// actually join the channel
+				return false;
+			};
+			Channel.prototype.part = function() {
+				// dirty work of parting channel
+				return false;
 			};
 			Channel.prototype.send = function( message ) {
 				// send to the channel
@@ -216,6 +225,10 @@ module.exports = exports = __iirc = (function() {
 				this.socket = null;
 				this.ssl = ssl;
 				return this;
+			};
+			Connection.prototype.command = function( data ) {
+				// send command to server
+				return false;
 			};
 			Connection.prototype.connect = function( callback ) {
 				// connect to this server's instance, return id
@@ -248,7 +261,13 @@ module.exports = exports = __iirc = (function() {
 				});
 			};
 			Connection.prototype.join = function( channel ) {
-				this.channels.push(new $classes.Channel());
+				if (typeof(channel) !== 'string') return false;
+				this.channels.push(new $classes.Channel(channel));
+				return true;
+			};
+			Connection.prototype.quit = function( message ) {
+				message = (typeof(message) === 'undefined') ? 'leaving' : message;
+				this.command('QUIT :'+message);
 				return true;
 			};
 			return Connection;
@@ -311,21 +330,23 @@ module.exports = exports = __iirc = (function() {
 			}
 		};
 	};
-	IIRC.prototype.broadcast = function( id, message, callback ) {
+	IIRC.prototype.broadcast = function( message ) {
 		for (var i=0,len=this.data.connections.length; i<len; i++) {
 			}	
 		return false;
 	};
-	IIRC.prototype.connect = function( channel, host, port, ssl ) {
+	IIRC.prototype.command = function( data, host ) {
+		// send a command string to the connection
+		return false;
+	};
+	IIRC.prototype.connect = function( host, port, ssl ) {
 		if (arguments.length === 0) return false;
 		if (arguments.length === 1) {
 			var descriptor = arguments[0];
-			var channel = descriptor.channel;
 			var host = descriptor.host;
 			var port = descriptor.port;
 			var ssl = descriptor.ssl;
 		}
-		var channel = typeof(channel) !== 'undefined' ? channel : '#iirc';
 		var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 		var port = typeof(port) !== 'undefined' ? port : 6667;
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
@@ -335,32 +356,51 @@ module.exports = exports = __iirc = (function() {
 		connection.connect();
 		return this;
 	};
-	IIRC.prototype.die = function( id, callback ) {
+	IIRC.prototype.die = function( callback ) {
 		// destroy channels
 		// destroy server
-		return false;
+		for (var connection in this.data.connections) {
+			if (this.data.connections.hasOwnProperty(connection)) {
+				for (var i=0,len=this.data.connections[connection].channels.length; i<len; i++) {
+					this.data.connections[connection].channels[i].part();
+				}
+				this.data.connections[connection].quit();
+			}
+		}
+		return typeof(callback) === 'function' && callback();
 	};
-	IIRC.prototype.join = function( id, channel ) {
-		// create channel
-		return false;
+	IIRC.prototype.join = function( channel, host ) {
+		if (typeof(channel) !== 'string') return false;
+		if (typeof(host) === 'undefined') {
+			var hosts = 0;
+			for (var connection in this.data.connections) {
+				if (this.data.connections.hasOwnProperty(connection)) {
+					//@debug1
+					console.log('----------->['+JSON.stringify(this.data.connections[connection])+']');
+					host = connection;
+					hosts++;
+				}
+			}
+			console.log('==============>['+hosts+']['+connection+']');
+			if (hosts !== 1) return false;
+		}
+		if (typeof(this.data.connections[host]) === 'undefined') return false;
+		this.data.connections[host].join(channel);
+		return this;
 	};
-	IIRC.prototype.message = function( id, nick, callback ) {
+	IIRC.prototype.message = function( nick ) {
 		// send message to nick
 		return false;
 	};
-	IIRC.prototype.part = function( id, channel, callback ) {
+	IIRC.prototype.part = function( channel ) {
 		// part specified channel
 		return false;
 	};
-	IIRC.prototype.raw = function( id, callback ) {
-		// send raw string to connection
-		return false;
-	};
-	IIRC.prototype.send = function( id, channel ) {
+	IIRC.prototype.send = function( channel, message ) {
 		// send message to channel
 		return false;
 	};
-	IIRC.prototype.set = function( id, key, value ) {
+	IIRC.prototype.set = function( key, value ) {
 		// set a particular key to value
 		return false;
 	};
