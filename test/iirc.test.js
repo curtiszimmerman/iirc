@@ -26,7 +26,7 @@ var __test = (function() {
 	var iirc = require('../iirc.js');
 	
 	var expect = require('chai').expect;
-	
+
 	describe('iirc', function() {
 		describe('# util.getID()', function() {
 			it('should return a string', function() {

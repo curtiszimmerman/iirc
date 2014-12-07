@@ -30,7 +30,7 @@ iirc.connect('#example', 'irc.example.net', 6667, false)
 	.on('message', function( message ) {
 		// message handle
 	});
-	
+iirc.connect
 */
 
 module.exports = exports = __iirc = (function() {
@@ -191,24 +191,18 @@ module.exports = exports = __iirc = (function() {
 			var Channel = function( channel ) {
 				if (typeof(channel) === 'undefined') throw new $classes.Exception('Channel(): Empty channel paramter.');
 				this.channel = channel;
-				//
-				//
-				// you need to do the dirty work of joining/parting, and monitoring for changes
-				//
-				//
+				this.users = [];
 				return this;
 			};
-			Channel.prototype.join = function() {
+			Channel.prototype.join = function( user ) {
 				// actually join the channel
-				return false;
+				this.users.push(user);
+				return true;
 			};
-			Channel.prototype.part = function() {
+			Channel.prototype.part = function( user ) {
 				// dirty work of parting channel
-				return false;
-			};
-			Channel.prototype.send = function( message ) {
-				// send to the channel
-				return false;
+				this.users.remove(user);
+				return true;
 			};
 			return Channel;
 		})(),
@@ -218,6 +212,7 @@ module.exports = exports = __iirc = (function() {
 				if (typeof(port) === 'undefined') throw new $classes.Exception('Connection(): Empty port parameter.');
 				if (typeof(ssl) === 'undefined') throw new $classes.Exception('Connection(): Empty ssl paramter.');
 				this.channels = [];
+				this.socket = null;
 				this.id = $util.getID($app.settings.defaults.idLength);
 				this.port = port;
 				this.ready = false;
@@ -228,7 +223,10 @@ module.exports = exports = __iirc = (function() {
 			};
 			Connection.prototype.command = function( data ) {
 				// send command to server
-				return false;
+				if (typeof(data) !== 'string') return false;
+				if (this.connection === null) return false;
+				this.socket.write();
+				return true;
 			};
 			Connection.prototype.connect = function( callback ) {
 				// connect to this server's instance, return id
@@ -241,21 +239,21 @@ module.exports = exports = __iirc = (function() {
 					this.ready = true;
 					return typeof(callback) === 'function' && callback();
 				};
-				var client = false;
+				this.socket = false;
 				try {
 					if (this.ssl === true) {
-						client = tls.connect(options, handler);
+						this.socket = tls.connect(options, handler);
 					} else {
-						client = net.connect(options, handler);
+						this.socket = net.connect(options, handler);
 					}
 				} catch(e) {
 					console.log('==>> ERROR ['+e.message+']');
 				}
-				client.on('on', function( data ) {
+				this.socket.on('on', function( data ) {
 					// handle client data
 					return false;
 				});
-				client.on('end', function() {
+				this.socket.on('end', function() {
 					// handle client session end
 					return false;
 				});
@@ -263,6 +261,11 @@ module.exports = exports = __iirc = (function() {
 			Connection.prototype.join = function( channel ) {
 				if (typeof(channel) !== 'string') return false;
 				this.channels.push(new $classes.Channel(channel));
+				return true;
+			};
+			Connection.prototype.part = function( channel ) {
+				if (typeof(channel) !== 'string') return false;
+				delete this.channels[channel];
 				return true;
 			};
 			Connection.prototype.quit = function( message ) {
@@ -319,9 +322,17 @@ module.exports = exports = __iirc = (function() {
 		}
 	};
 
+	var init = (function() {
+		// module initialization code
+		Array.prototype.remove = function( element ) {
+			var index = this.indexOf(element);
+			return (index > -1) ? this.splice(index, 1) : false;
+		};
+	})();
+
 	var IIRC = function() {
 		this.data = {
-			connections: {}
+			connection: {}
 		};
 		this.__test = {
 			util: {
@@ -337,6 +348,9 @@ module.exports = exports = __iirc = (function() {
 	};
 	IIRC.prototype.command = function( data, host ) {
 		// send a command string to the connection
+		if (typeof(host) !== 'string') return false;
+		if (typeof(data) !== 'string') return false;
+		this.data.connections[host] = '';
 		return false;
 	};
 	IIRC.prototype.connect = function( host, port, ssl ) {
@@ -352,7 +366,7 @@ module.exports = exports = __iirc = (function() {
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
 		var connection = new $classes.Connection(host, port, ssl);
 		var id = connection.id;
-		this.data.connections[id] = connection;
+		this.data.connection[id] = connection;
 		connection.connect();
 		return this;
 	};
@@ -360,11 +374,11 @@ module.exports = exports = __iirc = (function() {
 		// destroy channels
 		// destroy server
 		for (var connection in this.data.connections) {
-			if (this.data.connections.hasOwnProperty(connection)) {
-				for (var i=0,len=this.data.connections[connection].channels.length; i<len; i++) {
-					this.data.connections[connection].channels[i].part();
+			if (this.data.connection.hasOwnProperty(connection)) {
+				for (var i=0,len=this.data.connection[connection].channels.length; i<len; i++) {
+					this.data.connection[connection].channels[i].part();
 				}
-				this.data.connections[connection].quit();
+				this.data.connection[connection].quit();
 			}
 		}
 		return typeof(callback) === 'function' && callback();
@@ -376,7 +390,7 @@ module.exports = exports = __iirc = (function() {
 			for (var connection in this.data.connections) {
 				if (this.data.connections.hasOwnProperty(connection)) {
 					//@debug1
-					console.log('----------->['+JSON.stringify(this.data.connections[connection])+']');
+					console.log('----------->['+JSON.stringify(this.data.connection[connection])+']');
 					host = connection;
 					hosts++;
 				}
@@ -394,6 +408,8 @@ module.exports = exports = __iirc = (function() {
 	};
 	IIRC.prototype.part = function( channel ) {
 		// part specified channel
+		if (typeof(channel) !== 'string') return false;
+		this.data.connection.part();
 		return false;
 	};
 	IIRC.prototype.send = function( channel, message ) {
