@@ -221,13 +221,6 @@ module.exports = exports = __iirc = (function() {
 				this.ssl = ssl;
 				return this;
 			};
-			Connection.prototype.command = function( data ) {
-				// send command to server
-				if (typeof(data) !== 'string') return false;
-				if (this.connection === null) return false;
-				this.socket.write();
-				return true;
-			};
 			Connection.prototype.connect = function( callback ) {
 				// connect to this server's instance, return id
 				var options = {
@@ -247,10 +240,35 @@ module.exports = exports = __iirc = (function() {
 						this.socket = net.connect(options, handler);
 					}
 				} catch(e) {
-					console.log('==>> ERROR ['+e.message+']');
+					throw new $classes.Exception('[!] ERROR: '+e.message);
 				}
 				this.socket.on('on', function( data ) {
 					// handle client data
+					var inbound = $util.parseInput(data);
+					switch (inbound.command) {
+						case 352:
+							_log.dbg('352 (WHO list): Adding user to channel ('+inbound.params[5]+')');
+							this.channels[inbound.params[1]].join(inbound.params[5]);
+							break;
+						case 353:
+							_log.dbg('353 (WHO list supplmental): Getting user list ('+inbound.trailing+')');
+							this.channels[inbound.params[2]].join(inbound.trailing);
+							break;
+						case 'JOIN':
+							_log.dbg('JOIN: Joining channel ('+inbound.params[0]+')')
+							this.channels[inbound.params[0]].join();
+							break;
+						case 'PART':
+							_log.dbg('PART: Parting channel ('+inbound.params[0]+')');
+							this.channels[inbound.params[0]].part();
+							break;
+						case 'PRIVMSG':
+							break;
+						case 'WHO':
+							break;
+						default:
+							break;
+					}
 					return false;
 				});
 				this.socket.on('end', function() {
@@ -258,14 +276,23 @@ module.exports = exports = __iirc = (function() {
 					return false;
 				});
 			};
+			Connection.prototype.data = function( data, callback ) {
+				// send command to server
+				if (typeof(data) !== 'string') return false;
+				if (this.connection === null) return false;
+				this.socket.write();
+				return typeof(callback) === 'function' && callback();
+			};
 			Connection.prototype.join = function( channel ) {
 				if (typeof(channel) !== 'string') return false;
 				this.channels.push(new $classes.Channel(channel));
+				this.data('JOIN '+channel);
 				return true;
 			};
 			Connection.prototype.part = function( channel ) {
 				if (typeof(channel) !== 'string') return false;
-				delete this.channels[channel];
+				
+				this.data('PART '+channel);
 				return true;
 			};
 			Connection.prototype.quit = function( message ) {
@@ -373,33 +400,29 @@ module.exports = exports = __iirc = (function() {
 	IIRC.prototype.die = function( callback ) {
 		// destroy channels
 		// destroy server
-		for (var connection in this.data.connections) {
-			if (this.data.connection.hasOwnProperty(connection)) {
-				for (var i=0,len=this.data.connection[connection].channels.length; i<len; i++) {
-					this.data.connection[connection].channels[i].part();
-				}
-				this.data.connection[connection].quit();
-			}
+		for (var i=0,len=this.data.connection.channels.length; i<len; i++) {
+			this.data.connection.channels[i].part();
 		}
+		this.data.connection.quit();
 		return typeof(callback) === 'function' && callback();
 	};
 	IIRC.prototype.join = function( channel, host ) {
 		if (typeof(channel) !== 'string') return false;
 		if (typeof(host) === 'undefined') {
 			var hosts = 0;
-			for (var connection in this.data.connections) {
-				if (this.data.connections.hasOwnProperty(connection)) {
+			for (var cx in this.data.connection) {
+				if (this.data.connection.hasOwnProperty(cx)) {
 					//@debug1
-					console.log('----------->['+JSON.stringify(this.data.connection[connection])+']');
-					host = connection;
+					console.log('----------->['+JSON.stringify(this.data.connection)+']');
+					host = cx;
 					hosts++;
 				}
 			}
 			console.log('==============>['+hosts+']['+connection+']');
 			if (hosts !== 1) return false;
 		}
-		if (typeof(this.data.connections[host]) === 'undefined') return false;
-		this.data.connections[host].join(channel);
+		if (typeof(this.data.connection) === 'undefined') return false;
+		this.data.connection.join(channel);
 		return this;
 	};
 	IIRC.prototype.message = function( nick ) {
