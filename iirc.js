@@ -280,7 +280,7 @@ module.exports = exports = __iirc = (function() {
 				// send command to server
 				if (typeof(data) !== 'string') return false;
 				if (this.connection === null) return false;
-				this.socket.write();
+				this.socket.write(data);
 				return typeof(callback) === 'function' && callback();
 			};
 			Connection.prototype.join = function( channel ) {
@@ -297,7 +297,7 @@ module.exports = exports = __iirc = (function() {
 			};
 			Connection.prototype.quit = function( message ) {
 				message = (typeof(message) === 'undefined') ? 'leaving' : message;
-				this.command('QUIT :'+message);
+				this.data('QUIT :'+message);
 				return true;
 			};
 			return Connection;
@@ -392,8 +392,7 @@ module.exports = exports = __iirc = (function() {
 		var port = typeof(port) !== 'undefined' ? port : 6667;
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
 		var connection = new $classes.Connection(host, port, ssl);
-		var id = connection.id;
-		this.data.connection[id] = connection;
+		this.data.connection = connection;
 		connection.connect();
 		return this;
 	};
