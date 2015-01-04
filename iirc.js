@@ -77,40 +77,50 @@ module.exports = exports = __iirc = (function() {
 		};
 	})();
 
-	/**
+		/**
 	 * @function _log
-	 * Exposes three logging functions.
-	 * @method dbg
+	 * Exposes logging functions.
+	 * @method debug
 	 * Log a debug message if debugging is on.
 	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
-	 * @method err
+	 * @method error
 	 * Log an error.
+	 * @param (string) data - The data to log.
+	 * @return (boolean) Success indicator.
+	 * @method info
+	 * Log an informational message.
 	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
 	 * @method log
 	 * Log a message.
 	 * @param (string) data - The data to log.
+	 * @param (integer) [loglevel] - Loglevel of data. Default 1.
+	 * @return (boolean) Success indicator.
+	 * @method warn
+	 * Log a warning.
+	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
 	 */
 	var _log = (function() {
-		var _con = function( data, type ) {
-			var pre = ['[i] DEBUG: ', '[!] ERROR: ', '[+] '];
-			return console.log(pre[type]+data);
+		var _con = function( data, loglevel ) {
+			var pre = ['[!] ERROR: ', '[+] ', '[i] WARN: ', '[i] INFO: ', '[i] DEBUG: '];
+			return console.log(pre[loglevel]+data);
 		};
-		var _dbg = function( data ) {
-			if ($app.server.state.debug === true) return _con(data, 0);
+		var _debug = function( data ) { return _con(data, 4);};
+		var _error = function( data ) { return _con(data, 0);};
+		var _info = function( data ) { return _con(data, 3);};
+		var _log = function( data, loglevel ) {
+			var loglevel = typeof(loglevel) === 'undefined' ? 1 : loglevel > 4 ? 4 : loglevel;
+			return $data.server.settings.logs.quiet ? loglevel === 0 && _con(data, 0) : loglevel <= $data.server.settings.logs.level && _con(data, loglevel);
 		};
-		var _err = function( data ) {
-			return _con(data, 1);
-		};
-		var _log = function( data ) {
-			return _con(data, 2);
-		};
+		var _warn = function( data ) { return _con(data, 2);};
 		return {
-			dbg: _dbg,
-			err: _err,
-			log: _log
+			debug: _debug,
+			error: _error,
+			info: _info,
+			log: _log,
+			warn: _warn
 		};
 	})();
 
@@ -173,16 +183,22 @@ module.exports = exports = __iirc = (function() {
 		};
 	})();
 
-	var $app = {
-		settings: {
-			defaults: {
-				altnick: "iirc_",
-				idLength: 4,
-				nickname: "iirc",
-				realname: "iirc",
-				username: "iirc"
-			},
-			version: "v0.0.1a"
+	var $data = {
+		server: {
+			settings: {
+				defaults: {
+					altnick: "iirc_",
+					idLength: 4,
+					nickname: "iirc",
+					realname: "iirc",
+					username: "iirc"
+				},
+				logs: {
+					level: 1,
+					quiet: false
+				},
+				version: "v0.0.1a"
+			}
 		}
 	};
 
@@ -213,7 +229,7 @@ module.exports = exports = __iirc = (function() {
 				if (typeof(ssl) === 'undefined') throw new $classes.Exception('Connection(): Empty ssl paramter.');
 				this.channels = [];
 				this.socket = null;
-				this.id = $util.getID($app.settings.defaults.idLength);
+				this.id = $util.getID($data.server.settings.defaults.idLength);
 				this.port = port;
 				this.ready = false;
 				this.host = host;
@@ -229,10 +245,14 @@ module.exports = exports = __iirc = (function() {
 				};
 				var handler = function() {
 					// handle this shit
+					//@debug1
+					console.log('---SOCKET HANDLER');
 					this.ready = true;
 					return typeof(callback) === 'function' && callback();
 				};
 				this.socket = false;
+				//@debug1
+				console.log('---.connect()->connecting socket');
 				try {
 					if (this.ssl === true) {
 						this.socket = tls.connect(options, handler);
@@ -242,24 +262,30 @@ module.exports = exports = __iirc = (function() {
 				} catch(e) {
 					throw new $classes.Exception('[!] ERROR: '+e.message);
 				}
-				this.socket.on('on', function( data ) {
+				//@debug1
+				console.log('---.connect()->socket connected');
+				this.socket.on('error', function( error ) {
+					//@debug1
+					console.log('---.connect()->ERROR event emitted: ('+error+')');
+				});
+				this.socket.on('data', function( data ) {
 					// handle client data
 					var inbound = $util.parseInput(data);
 					switch (inbound.command) {
 						case 352:
-							_log.dbg('352 (WHO list): Adding user to channel ('+inbound.params[5]+')');
+							_log.debug('352 (WHO list): Adding user to channel ('+inbound.params[5]+')');
 							this.channels[inbound.params[1]].join(inbound.params[5]);
 							break;
 						case 353:
-							_log.dbg('353 (WHO list supplmental): Getting user list ('+inbound.trailing+')');
+							_log.debug('353 (WHO list supplmental): Getting user list ('+inbound.trailing+')');
 							this.channels[inbound.params[2]].join(inbound.trailing);
 							break;
 						case 'JOIN':
-							_log.dbg('JOIN: Joining channel ('+inbound.params[0]+')')
+							_log.debug('JOIN: Joining channel ('+inbound.params[0]+')')
 							this.channels[inbound.params[0]].join();
 							break;
 						case 'PART':
-							_log.dbg('PART: Parting channel ('+inbound.params[0]+')');
+							_log.debug('PART: Parting channel ('+inbound.params[0]+')');
 							this.channels[inbound.params[0]].part();
 							break;
 						case 'PRIVMSG':
@@ -269,17 +295,29 @@ module.exports = exports = __iirc = (function() {
 						default:
 							break;
 					}
+					//
+					//
+					// debug
+					//
+					//
+					console.log('---SOCKET DATA ['+inbound+']');
 					return false;
 				});
 				this.socket.on('end', function() {
 					// handle client session end
+					//@debug1
+					console.log('---SOCKET END');
 					return false;
 				});
+				//@debug1
+				console.log('---.connect() finished!');
 			};
 			Connection.prototype.data = function( data, callback ) {
 				// send command to server
 				if (typeof(data) !== 'string') return false;
 				if (this.connection === null) return false;
+				//@debug1
+				console.log('---===.data()->WRITING');
 				this.socket.write(data);
 				return typeof(callback) === 'function' && callback();
 			};
@@ -322,7 +360,7 @@ module.exports = exports = __iirc = (function() {
 			if (typeof(len) !== 'undefined' && typeof(len) !== 'number') return false;
 			for (
 				var i = 0, id = '', charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-				i < (len > 0 ? len : $app.settings.defaults.idLength);
+				i < (len > 0 ? len : $data.server.settings.defaults.idLength);
 				i++
 			) {	id += charset.substr(Math.floor(Math.random()*charset.length), 1); }
 			return id;
@@ -351,17 +389,27 @@ module.exports = exports = __iirc = (function() {
 
 	var init = (function() {
 		// module initialization code
-		Array.prototype.remove = function( element ) {
-			var index = this.indexOf(element);
-			return (index > -1) ? this.splice(index, 1) : false;
-		};
+		if (typeof(Array.prototype.remove) === 'undefined') {
+			Array.prototype.remove = function( element ) {
+				var index = this.indexOf(element);
+				return (index > -1) ? this.splice(index, 1) : false;
+			};
+		}
 	})();
+
+	//
+	//
+	// so you need to take way more advantage of pubsub events as a 
+	// fundamental behavior
+	//
+	//
 
 	var IIRC = function() {
 		this.data = {
 			connection: {}
 		};
 		this.__test = {
+			pubsub: _pubsub,
 			util: {
 				getID: $util.getID,
 				parseInput: $util.parseInput
@@ -369,9 +417,11 @@ module.exports = exports = __iirc = (function() {
 		};
 	};
 	IIRC.prototype.broadcast = function( message ) {
-		for (var i=0,len=this.data.connections.length; i<len; i++) {
-			}	
-		return false;
+		if (typeof(message) === 'undefined') return false;
+		for (var i=0,len=this.data.connection.channels.length; i<len; i++) {
+			this.data.connection.channels[i].send(message);
+		}	
+		return true;
 	};
 	IIRC.prototype.command = function( data, host ) {
 		// send a command string to the connection
@@ -391,9 +441,13 @@ module.exports = exports = __iirc = (function() {
 		var host = typeof(host) !== 'undefined' ? host : 'irc.freenode.net';
 		var port = typeof(port) !== 'undefined' ? port : 6667;
 		var ssl = typeof(ssl) !== 'undefined' ? ssl : false;
+		//@debug1
+		console.log('---first');
 		var connection = new $classes.Connection(host, port, ssl);
 		this.data.connection = connection;
-		connection.connect();
+		this.data.connection.connect();
+		//@debug1
+		console.log('---last');
 		return this;
 	};
 	IIRC.prototype.die = function( callback ) {
@@ -405,21 +459,8 @@ module.exports = exports = __iirc = (function() {
 		this.data.connection.quit();
 		return typeof(callback) === 'function' && callback();
 	};
-	IIRC.prototype.join = function( channel, host ) {
+	IIRC.prototype.join = function( channel ) {
 		if (typeof(channel) !== 'string') return false;
-		if (typeof(host) === 'undefined') {
-			var hosts = 0;
-			for (var cx in this.data.connection) {
-				if (this.data.connection.hasOwnProperty(cx)) {
-					//@debug1
-					console.log('----------->['+JSON.stringify(this.data.connection)+']');
-					host = cx;
-					hosts++;
-				}
-			}
-			console.log('==============>['+hosts+']['+connection+']');
-			if (hosts !== 1) return false;
-		}
 		if (typeof(this.data.connection) === 'undefined') return false;
 		this.data.connection.join(channel);
 		return this;
@@ -434,8 +475,19 @@ module.exports = exports = __iirc = (function() {
 		this.data.connection.part();
 		return false;
 	};
-	IIRC.prototype.send = function( channel, message ) {
+	IIRC.prototype.send = function( message, channel ) {
 		// send message to channel
+		if (typeof(this.data.connection) === 'undefined') return false;
+		if (typeof(channel) === 'undefined') {
+			var len = this.data.connection.channels.length;
+			return (len === 0 || len > 1) ? false : channel = this.data.connection.channels[0].send(message);
+		}
+		for (var i=0,len=this.data.connection.channels.length; i<len; i++) {
+			if (this.data.connection.channels[i].channel === channel) {
+				this.data.connection.channels[i].send(message);
+				return true;
+			}
+		}
 		return false;
 	};
 	IIRC.prototype.set = function( key, value ) {

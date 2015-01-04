@@ -113,5 +113,23 @@ var __test = (function() {
 				expect(true).to.be.true();
 			});
 		});
+
+		// test
+		describe('### testing connection', function() {
+			it('should connect', function() {
+				var result = iirc
+					.connect('irc.freenode.net', 6667, false)
+					.join('##iirc');
+				for (var prop in result) {
+					//if (result.hasOwnProperty(prop)) {
+						//console.log('-['+prop+']['+result[prop]+']');
+					//}
+				}
+				result.join('#sulfurworks');
+				result.send('fooooooo');
+				result.send('leaving');
+				result.die();
+			});
+		});
 	});
 })();

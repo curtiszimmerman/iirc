@@ -8,7 +8,7 @@ IIRC is a simple, modular Node.js IRC client.
 
 IIRC was built with a purpose in mind: Hooking an API into IRC for notifications. CI/CD service IRC 
 notifications can be pretty spammy, and also lacking in depth, functionality, and customization. 
-IIRC was created to solve this (almost nitpicky) problem. Simply pull IIRC into any web server and 
+IIRC was created to solve this (nitpicky, minor) problem. Simply pull IIRC into any web server and 
 you've got an instant webhook for ultra customizable notifications. IIRC uses Node's built-in 
 modules, so there's no need to worry about code bloat.
 
@@ -20,17 +20,21 @@ In its simplest form, IIRC by default connects to Freenode:
 var iirc = require('iirc');
 
 client.on('message', function(message) {
-	iirc.send('#devchan', 'Received message: ' + message);
+	iirc.send('Received message: ' + message, '##iirc');
 });
 ```
 
 But of course you can specify a variety of configuration options:
 
 ```javascript
-iirc.config({
-	channel: ''
+var iirc = require('iirc').config({
+	channel: "##iirc",
 	host: "irc.example.com",
 	port: 6697,
 	ssl: true
 });
+client.on('message', function(message) {
+	iirc.send('Received message: ' + message);
+});
 ```
+
