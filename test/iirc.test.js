@@ -83,10 +83,12 @@ var __test = (function() {
 				var result = iirc.connect();
 				expect(result).to.be.false();
 			});
-			it('should return itself when called with arguments', function() {
-				var result = iirc.connect('irc.example.net', 6667, false);
-				expect(result).to.not.be.undefined();
-				expect(result).to.be.an('object');
+			it('should return itself when called with arguments', function(done) {
+				var result = iirc.connect('irc.example.net', 6667, false, function() {
+					done();
+				});
+				expect(result).to.eventually.not.be.undefined();
+				expect(result).to.eventually.be.an('object');
 				result.die();
 			});
 		});
