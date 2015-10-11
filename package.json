@@ -1,6 +1,6 @@
 {
 	"name": "iirc",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Modular Node.js IRC Client",
 	"main": "iirc.js",
 	"devDependencies": {
