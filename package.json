@@ -1,28 +1,30 @@
 {
-	"name": "iirc",
-	"version": "0.0.2",
-	"description": "Modular Node.js IRC Client",
-	"main": "iirc.js",
-	"devDependencies": {
-		"chai": ">= 1.9.1",
-		"mocha": ">= 1.20.1"
-	},
-	"scripts": {
-		"test": "mocha"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/curtiszimmerman/iirc.git"
-	},
-	"keywords": [
-		"irc",
-		"node",
-		"chat",
-		"webhook"
-	],
-	"author": "curtis zimmerman",
-	"license": "GPLv3",
-	"bugs": {
-		"url": "https://github.com/curtiszimmerman/iirc/issues"
-	}
+  "name": "iirc",
+  "version": "0.1.0-alpha",
+  "description": "Modular Node.js IRC Client",
+  "main": "iirc.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/curtiszimmerman/iirc.git"
+  },
+  "keywords": [
+    "irc",
+    "node",
+    "chat",
+    "webhook"
+  ],
+  "author": "curtis zimmerman",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/curtiszimmerman/iirc/issues"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3",
+    "sinon-chai": "^2.8.0"
+  }
 }
